@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CodeAnalysisApp1
+namespace TechDebtSyntaxRewriter
 {
 
     [Flags]
@@ -19,18 +19,22 @@ namespace CodeAnalysisApp1
         Operation3 = 4
     }
 
-    class GettingListProgrammerIntention 
+    class ListRetrievalFact : GenericFact
     {
         public string varName;
         public ArgumentSyntax creationArgument;
         public OperationEnum transformOption;
 
-        public SyntaxNode GetRewrittenNode(SyntaxNode original)
+        public ListRetrievalFact(SyntaxNode keyNode) : base(keyNode) 
+        { 
+        }
+
+        public override SyntaxNode GetRewrittenNode()
         {
             // var list = GetListCached("HELLO", OperationEnum.Operation1 | OperationEnum.Operation2);
             var opt = from o in transformOption.ToString().Split(',') select "OperationEnum." + o.Trim();
             var syntax = $"var {varName} = GetListCached({creationArgument.ToString()}, {String.Join(" | ", opt)});";
-            return SyntaxFactory.ParseStatement(syntax).NormalizeWhitespace().WithTriviaFrom(original); 
+            return SyntaxFactory.ParseStatement(syntax).NormalizeWhitespace().WithTriviaFrom(KeyNode); 
         }
 
     }

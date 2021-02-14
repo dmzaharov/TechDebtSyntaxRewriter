@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data;
 
-namespace CodeAnalysisApp1
+namespace TechDebtSyntaxRewriter
 {
     class Program
     {
@@ -107,47 +107,26 @@ namespace CodeAnalysisApp1
     }
     }");
 
+            // analyze tree and detect facts of intention
             var syntaxRoot = tree.GetRoot();
-            var keyNodes = syntaxRoot.DescendantNodes().OfType<LocalDeclarationStatementSyntax>()
-                .Where(m => ((IdentifierNameSyntax)
-                            ((InvocationExpressionSyntax)m.Declaration.Variables[0].Initializer.Value)
-                            .Expression).Identifier.Value.ToString() == "GetListFromSomewhere").ToArray();
-
+            var detectedFacts = CodeAnalyzer.GatherFacts(syntaxRoot);
+            
+            // prepare node rewrites and removals 
             Dictionary<SyntaxNode, SyntaxNode> nodeRewrites = new Dictionary<SyntaxNode, SyntaxNode>();
-
-            foreach (var keyNode in keyNodes)
+            foreach (var intention in detectedFacts) 
             {
-                Console.WriteLine($"Rewriting {keyNode.ToString()}");
-                var intention = new GettingListProgrammerIntention();
-                var vardecl = (VariableDeclaratorSyntax)(keyNode.Declaration.Variables[0]);
-                intention.varName = vardecl.Identifier.ValueText;
-                intention.creationArgument = (((InvocationExpressionSyntax)vardecl.Initializer.Value).ArgumentList.Arguments[0]);
-                var block = ((BlockSyntax)keyNode.Parent).Statements;
-                var indexOfKeyNode = block.IndexOf(keyNode);
-                for (var nodeIndex = indexOfKeyNode + 1; nodeIndex < block.Count; nodeIndex++)
+                // replace key node with rewritten node
+                nodeRewrites.Add(intention.KeyNode, intention.GetRewrittenNode());
+                foreach (var nodeToRemove in intention.OtherNodes)
                 {
-                    var stmt = block[nodeIndex];
-                    try {                        
-                        var methodName = ((IdentifierNameSyntax)
-                            ((InvocationExpressionSyntax)
-                            ((ExpressionStatementSyntax)stmt).Expression).Expression).Identifier.ValueText;
-                        OperationEnum methodEnumOption;
-                        if (Enum.TryParse<OperationEnum>(methodName, out methodEnumOption)) {
-                            intention.transformOption = intention.transformOption | methodEnumOption;
-                            // schedule removal of operation node 
-                            nodeRewrites.Add(stmt, null);
-                        }
-                        else { break; }
-                    } catch { break; }
+                    // remove other nodes linked to fact of intention
+                    nodeRewrites.Add(nodeToRemove, null);
                 }
-                // schedule rewrite of key node
-                nodeRewrites.Add(keyNode, intention.GetRewrittenNode(keyNode));
-
             }
 
             var rewriter = new SimpleNodeRewriter(nodeRewrites);
-            var result = rewriter.Visit(tree.GetRoot());
-            Console.WriteLine(result.ToFullString());
+            var transformedSyntaxTree = rewriter.Visit(syntaxRoot);
+            Console.WriteLine(transformedSyntaxTree.ToFullString());
 
         }
 
