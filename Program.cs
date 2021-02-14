@@ -108,8 +108,8 @@ namespace TechDebtSyntaxRewriter
     }");
 
             // analyze tree and detect facts of intention
-            var syntaxRoot = tree.GetRoot();
-            var detectedFacts = CodeAnalyzer.GatherFacts(syntaxRoot);
+            var orinalTreeRoot = tree.GetRoot();
+            var detectedFacts = CodeAnalyzer.GatherFacts(orinalTreeRoot);
             
             // prepare node rewrites and removals 
             Dictionary<SyntaxNode, SyntaxNode> nodeRewrites = new Dictionary<SyntaxNode, SyntaxNode>();
@@ -125,8 +125,8 @@ namespace TechDebtSyntaxRewriter
             }
 
             var rewriter = new SimpleNodeRewriter(nodeRewrites);
-            var transformedSyntaxTree = rewriter.Visit(syntaxRoot);
-            Console.WriteLine(transformedSyntaxTree.ToFullString());
+            var transformedTreeRoot = rewriter.Visit(orinalTreeRoot);
+            Console.WriteLine(transformedTreeRoot.ToFullString());
 
         }
 
