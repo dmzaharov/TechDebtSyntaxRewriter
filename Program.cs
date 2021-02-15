@@ -18,7 +18,7 @@ namespace TechDebtSyntaxRewriter
     class Program
     {
 
-        public static void processList()
+        public static void ShowExample()
         {
             var list = GetListFromSomewhere("HELLO");
             Operation1(list);
@@ -26,11 +26,16 @@ namespace TechDebtSyntaxRewriter
             // process list
             // ...
 
-            var list2 = GetListFromSomewhere("BONJOUR");
-            Operation1(list2);
+            var list2 = GetListFromSomewhere("BONJOUR" + ObtainSuffix("PARIS"));
+            Operation2(list2);
             Operation3(list2);
             // process list
             // ...
+        }
+
+        private static string ObtainSuffix(string v)
+        {
+            throw new NotImplementedException();
         }
 
         public static List<string> GetListFromSomewhere(string keyword)
@@ -84,12 +89,10 @@ namespace TechDebtSyntaxRewriter
 
         public static void Main(string[] args)
         {
-
-            //A syntax tree with an unnecessary semicolon on its own line
             var tree = CSharpSyntaxTree.ParseText(@"
     public class Sample
     {
-       public void ShowExample()
+       public static void ShowExample()
        {
           {
             var list = GetListFromSomewhere(""HELLO"");
@@ -99,7 +102,7 @@ namespace TechDebtSyntaxRewriter
             // ...
 
             var list2 = GetListFromSomewhere(""BONJOUR"" + ObtainSuffix(""PARIS""));
-            Operation1(list2);
+            Operation2(list2);
             Operation3(list2);
             // process list
             // ...
